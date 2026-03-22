@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MemoryEngine - Persistent Memory Infrastructure for AI Agents</title>
+  <meta name="description" content="MemoryEngine is building persistent memory infrastructure for AI agents. We help developers store and retrieve user context, preferences, facts, workflows, and past interactions across sessions.">
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --surface: #ffffff;
+      --surface-alt: #eef3f9;
+      --ink: #102033;
+      --muted: #556579;
+      --line: #d8e0ea;
+      --brand: #0f6cbd;
+      --brand-deep: #0a4f8c;
+      --accent: #dff1ff;
+      --shadow: 0 24px 60px rgba(16, 32, 51, 0.08);
+      --radius: 18px;
+      --max: 1180px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      font-family: Aptos, "Segoe UI Variable", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(15, 108, 189, 0.10), transparent 28%),
+        linear-gradient(180deg, #f8fbff 0%, var(--bg) 100%);
+      line-height: 1.6;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .shell {
+      width: min(var(--max), calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(14px);
+      background: rgba(248, 251, 255, 0.88);
+      border-bottom: 1px solid rgba(216, 224, 234, 0.9);
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 74px;
+      gap: 24px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 1.08rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--brand) 0%, #7bb6ec 100%);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 800;
+      box-shadow: 0 10px 24px rgba(15, 108, 189, 0.28);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.96rem;
+    }
+
+    .nav-links a:hover,
+    .footer-links a:hover,
+    .inline-link:hover { color: var(--brand); }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .menu-toggle {
+      display: none;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--ink);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      border-radius: 999px;
+      padding: 13px 20px;
+      font-weight: 600;
+      border: 1px solid transparent;
+      transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .button:hover { transform: translateY(-1px); }
+
+    .button.primary {
+      background: var(--brand);
+      color: #fff;
+      box-shadow: 0 14px 28px rgba(15, 108, 189, 0.20);
+    }
+
+    .button.primary:hover { background: var(--brand-deep); }
+
+    .button.secondary {
+      background: var(--surface);
+      border-color: var(--line);
+      color: var(--ink);
+    }
+
+    .button.secondary:hover { border-color: #b6c7da; }
+
+    .hero { padding: 64px 0 48px; }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+      gap: 34px;
+      align-items: stretch;
+    }
+
+    .hero-copy,
+    .hero-panel,
+    .section-card,
+    .use-case,
+    .feature,
+    .infra-card,
+    .team-card,
+    .contact-card {
+      background: rgba(255, 255, 255, 0.84);
+      border: 1px solid rgba(216, 224, 234, 0.92);
+      box-shadow: var(--shadow);
+      border-radius: var(--radius);
+    }
+
+    .hero-copy {
+      padding: 38px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-copy::after {
+      content: "";
+      position: absolute;
+      inset: auto -40px -70px auto;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(15, 108, 189, 0.12) 0%, rgba(15, 108, 189, 0) 72%);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: var(--accent);
+      color: var(--brand-deep);
+      font-size: 0.86rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      margin-bottom: 22px;
+    }
+
+    .hero h1,
+    h2,
+    h3 {
+      margin: 0;
+      letter-spacing: -0.03em;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.5rem, 6vw, 4.6rem);
+      line-height: 1.03;
+      max-width: 11ch;
+    }
+
+    .hero p.lead {
+      font-size: 1.1rem;
+      color: var(--muted);
+      max-width: 60ch;
+      margin: 18px 0 0;
+    }
+
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin: 28px 0 30px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .hero-meta li {
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.8);
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+
+    .hero-note {
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .hero-panel {
+      padding: 28px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .panel-section {
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(238,243,249,0.95) 100%);
+      border-radius: 16px;
+      padding: 18px;
+    }
+
+    .panel-label,
+    .section-label {
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--brand);
+      margin-bottom: 10px;
+    }
+
+    .panel-section p,
+    .section-copy,
+    .card-copy,
+    .contact-copy,
+    .footer-note { color: var(--muted); }
+
+    .panel-section p {
+      margin: 0;
+      font-size: 0.96rem;
+    }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .status-item {
+      border-radius: 14px;
+      padding: 14px;
+      background: #fff;
+      border: 1px solid var(--line);
+    }
+
+    .status-item strong {
+      display: block;
+      font-size: 0.88rem;
+      color: var(--ink);
+      margin-bottom: 6px;
+    }
+
+    .status-item span {
+      font-size: 0.92rem;
+      color: var(--muted);
+    }
+
+    .mini-architecture {
+      display: grid;
+      gap: 12px;
+    }
+
+    .mini-architecture .layer {
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: #fff;
+      border: 1px solid var(--line);
+    }
+
+    .mini-architecture .layer strong {
+      display: block;
+      font-size: 0.93rem;
+      margin-bottom: 5px;
+    }
+
+    .mini-architecture .layer span {
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .section { padding: 34px 0; }
+
+    .section-top {
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+      gap: 28px;
+      align-items: start;
+      margin-bottom: 28px;
+    }
+
+    .section-title {
+      font-size: clamp(1.9rem, 4vw, 3rem);
+      line-height: 1.08;
+    }
+
+    .section-copy {
+      font-size: 1.02rem;
+      margin: 0;
+    }
+
+    .section-card { padding: 28px; }
+
+    .about-grid,
+    .product-grid,
+    .use-cases-grid,
+    .infra-grid,
+    .team-grid,
+    .contact-grid {
+      display: grid;
+      gap: 20px;
+    }
+
+    .about-grid {
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+    }
+
+    .about-points,
+    .product-list,
+    .contact-list,
+    .footer-links {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .about-points li,
+    .product-list li,
+    .contact-list li {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 14px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .about-points li:first-child,
+    .product-list li:first-child,
+    .contact-list li:first-child {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--brand);
+      margin-top: 9px;
+      flex: 0 0 auto;
+    }
+
+    .product-grid,
+    .use-cases-grid,
+    .infra-grid,
+    .team-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .feature,
+    .use-case,
+    .infra-card,
+    .team-card,
+    .contact-card { padding: 24px; }
+
+    .feature h3,
+    .use-case h3,
+    .infra-card h3,
+    .team-card h3,
+    .contact-card h3 {
+      font-size: 1.18rem;
+      margin-bottom: 10px;
+    }
+
+    .card-copy,
+    .contact-copy {
+      margin: 0;
+      font-size: 0.98rem;
+    }
+
+    .feature-tag {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 42px;
+      height: 42px;
+      padding: 0 14px;
+      border-radius: 12px;
+      background: var(--surface-alt);
+      color: var(--brand-deep);
+      font-size: 0.82rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .architecture-layout {
+      display: grid;
+      gap: 18px;
+    }
+
+    .architecture-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .arch-node {
+      padding: 22px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, #ffffff 0%, #f7fafd 100%);
+      min-height: 140px;
+    }
+
+    .arch-node h3 {
+      font-size: 1.04rem;
+      margin-bottom: 8px;
+    }
+
+    .arch-node p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .architecture-note {
+      padding: 18px 20px;
+      border-radius: 16px;
+      border: 1px dashed #b8c8d8;
+      background: rgba(223, 241, 255, 0.55);
+      color: var(--muted);
+      font-size: 0.97rem;
+    }
+
+    .infra-callout,
+    .team-callout,
+    .contact-banner {
+      padding: 22px 24px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(15,108,189,0.08) 0%, rgba(255,255,255,0.85) 100%);
+    }
+
+    .team-card.soft {
+      background: linear-gradient(180deg, rgba(230,245,235,0.65) 0%, rgba(255,255,255,0.92) 100%);
+    }
+
+    .contact-grid {
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+      align-items: stretch;
+    }
+
+    .contact-card.primary-card {
+      background: linear-gradient(135deg, #102033 0%, #17314b 100%);
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .contact-card.primary-card .contact-copy,
+    .contact-card.primary-card .contact-list a,
+    .contact-card.primary-card .contact-list span {
+      color: rgba(255, 255, 255, 0.82);
+    }
+
+    .contact-list li span:first-child {
+      display: inline-block;
+      min-width: 86px;
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    .contact-card.primary-card .contact-list li span:first-child { color: #fff; }
+
+    .contact-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 22px;
+    }
+
+    .contact-card.primary-card .button.secondary {
+      background: transparent;
+      border-color: rgba(255,255,255,0.22);
+      color: #fff;
+    }
+
+    .contact-card.primary-card .button.secondary:hover {
+      border-color: rgba(255,255,255,0.4);
+    }
+
+    footer { padding: 34px 0 48px; }
+
+    .footer-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding-top: 24px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+    }
+
+    .footer-brand {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .brand-line {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .inline-link {
+      color: var(--brand);
+      font-weight: 600;
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity 0.55s ease, transform 0.55s ease;
+    }
+
+    .reveal.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 1024px) {
+      .hero-grid,
+      .section-top,
+      .about-grid,
+      .contact-grid,
+      .architecture-row {
+        grid-template-columns: 1fr;
+      }
+
+      .product-grid,
+      .use-cases-grid,
+      .infra-grid,
+      .team-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .nav {
+        flex-wrap: wrap;
+        padding: 14px 0;
+      }
+
+      .menu-toggle { display: inline-flex; }
+
+      .nav-links {
+        display: none;
+        width: 100%;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 12px 0 2px;
+      }
+
+      .site-header.menu-open .nav-links { display: flex; }
+
+      .nav-actions { margin-left: auto; }
+
+      .nav-actions .button { display: none; }
+
+      .hero { padding-top: 34px; }
+
+      .hero-copy,
+      .hero-panel,
+      .section-card,
+      .feature,
+      .use-case,
+      .infra-card,
+      .team-card,
+      .contact-card { padding: 22px; }
+
+      .product-grid,
+      .use-cases-grid,
+      .infra-grid,
+      .team-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .status-grid { grid-template-columns: 1fr; }
+
+      .footer-bar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header" id="top">
+    <div class="shell nav">
+      <a class="brand" href="#top" aria-label="MemoryEngine home">
+        <span class="brand-mark">M</span>
+        <span>MemoryEngine</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">Menu</button>
+      <ul class="nav-links" id="primary-nav">
+        <li><a href="#about">About</a></li>
+        <li><a href="#product">Product</a></li>
+        <li><a href="#use-cases">Use Cases</a></li>
+        <li><a href="#architecture">Architecture</a></li>
+        <li><a href="#cloud-needs">Cloud Needs</a></li>
+        <li><a href="#team">Team</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="shell hero-grid">
+        <div class="hero-copy reveal">
+          <div class="eyebrow">AI infrastructure / developer tools / early-stage MVP</div>
+          <h1>Persistent memory infrastructure for AI agents.</h1>
+          <p class="lead">
+            MemoryEngine helps developers give AI agents durable context across sessions. We are building the infrastructure layer that stores and retrieves user preferences, facts, workflows, and prior interactions so assistants and copilots can resume with continuity instead of starting from zero each time.
+          </p>
+          <ul class="hero-meta">
+            <li>Audience: developers, AI startups, SaaS teams</li>
+            <li>Product: API and SDK for agent memory</li>
+            <li>Use case: continuity, personalization, workflow state</li>
+          </ul>
+          <div class="hero-actions">
+            <a class="button secondary" href="#contact">Contact us</a>
+          </div>
+          <div class="hero-note">
+            Currently founder-led and focused on building a strong MVP for teams creating agentic products and developer-facing copilots.
+          </div>
+        </div>
+
+        <aside class="hero-panel reveal">
+          <div class="panel-section">
+            <div class="panel-label">Company Snapshot</div>
+            <div class="status-grid">
+              <div class="status-item">
+                <strong>Stage</strong>
+                <span>Early-stage startup with an MVP in active development</span>
+              </div>
+              <div class="status-item">
+                <strong>Buyer</strong>
+                <span>Product and engineering teams shipping AI features</span>
+              </div>
+              <div class="status-item">
+                <strong>Problem</strong>
+                <span>Most agents do not retain relevant context across sessions</span>
+              </div>
+              <div class="status-item">
+                <strong>Approach</strong>
+                <span>Persistent memory APIs, storage, retrieval, and policy controls</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel-section">
+            <div class="panel-label">Product Focus</div>
+            <p>
+              The initial product is a hosted memory service for AI applications that need user continuity, searchable long-term context, and operational support for memory ingestion, retrieval, and deletion.
+            </p>
+          </div>
+
+          <div class="panel-section">
+            <div class="panel-label">High-Level Architecture</div>
+            <div class="mini-architecture">
+              <div class="layer">
+                <strong>Applications</strong>
+                <span>Agents, copilots, workflow assistants, SaaS products</span>
+              </div>
+              <div class="layer">
+                <strong>Memory API</strong>
+                <span>Write memories, retrieve context, manage user scopes</span>
+              </div>
+              <div class="layer">
+                <strong>Data Services</strong>
+                <span>Metadata store, vector search, storage, background processing</span>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section" id="about">
+      <div class="shell">
+        <div class="section-top reveal">
+          <div>
+            <div class="section-label">About</div>
+            <h2 class="section-title">A practical memory layer for production AI applications.</h2>
+          </div>
+          <p class="section-copy">
+            MemoryEngine is focused on a specific infrastructure gap in AI products: long-term memory that can be queried safely and used across sessions. We are not positioning memory as a demo feature. We are building it as a developer primitive that AI teams can integrate into their products and operate reliably as usage grows.
+          </p>
+        </div>
+
+        <div class="about-grid">
+          <div class="section-card reveal">
+            <h3>What we are building</h3>
+            <p class="card-copy">
+              The product is designed to help AI systems retain the context that matters: user preferences, factual details, workflow state, and prior interactions. The goal is to improve continuity and usefulness for agents without forcing each product team to build custom memory infrastructure from scratch.
+            </p>
+            <ul class="about-points">
+              <li>
+                <span class="dot"></span>
+                <div>
+                  <strong>Developer-first integration</strong><br>
+                  APIs and SDKs intended for products that already use LLMs, agents, or retrieval workflows.
+                </div>
+              </li>
+              <li>
+                <span class="dot"></span>
+                <div>
+                  <strong>Scoped memory retrieval</strong><br>
+                  Context can be associated with users, accounts, workspaces, or applications depending on product requirements.
+                </div>
+              </li>
+              <li>
+                <span class="dot"></span>
+                <div>
+                  <strong>Operational controls</strong><br>
+                  Memory systems need deletion, observability, storage policies, and background processing, not just embeddings.
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <div class="section-card reveal">
+            <h3>Why now</h3>
+            <p class="card-copy">
+              Teams are moving from single-session chat experiences to agentic workflows that need continuity. As AI products become embedded in SaaS workflows, customer support, internal operations, and copilots, persistent context becomes a product requirement rather than a research idea.
+            </p>
+            <div class="infra-callout" style="margin-top: 18px;">
+              <strong>Current positioning</strong><br>
+              MemoryEngine is an early-stage company building an MVP. The website and product framing are intended to communicate a real infrastructure business with a clear use case, not speculative concept branding.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="product">
+      <div class="shell">
+        <div class="section-top reveal">
+          <div>
+            <div class="section-label">Product</div>
+            <h2 class="section-title">Memory services for teams building agents and copilots.</h2>
+          </div>
+          <p class="section-copy">
+            The initial product scope is deliberately focused: make it easier to write relevant memory, retrieve it at the right time, and manage the underlying infrastructure needed to run those workloads in production.
+          </p>
+        </div>
+
+        <div class="product-grid">
+          <article class="feature reveal">
+            <div class="feature-tag">01</div>
+            <h3>Memory write API</h3>
+            <p class="card-copy">
+              Store user facts, session summaries, workflow state, and interaction metadata through a consistent service layer instead of application-specific pipelines.
+            </p>
+          </article>
+
+          <article class="feature reveal">
+            <div class="feature-tag">02</div>
+            <h3>Retrieval for live prompts</h3>
+            <p class="card-copy">
+              Fetch relevant context before a model call so assistants can resume with prior preferences, account history, and known facts.
+            </p>
+          </article>
+
+          <article class="feature reveal">
+            <div class="feature-tag">03</div>
+            <h3>Multi-tenant data model</h3>
+            <p class="card-copy">
+              Support product teams that need memory organized by customer, workspace, user, or environment while keeping the integration model simple.
+            </p>
+          </article>
+
+          <article class="feature reveal">
+            <div class="feature-tag">04</div>
+            <h3>Operational controls</h3>
+            <p class="card-copy">
+              Memory infrastructure should support retention policies, deletion workflows, auditability, and service monitoring from the beginning.
+            </p>
+          </article>
+        </div>
+
+        <div class="section-card reveal" style="margin-top: 20px;">
+          <h3>Initial product assumptions</h3>
+          <ul class="product-list">
+            <li>
+              <span class="dot"></span>
+              <div>Hosted API first, with room to support more controlled deployment models as requirements mature.</div>
+            </li>
+            <li>
+              <span class="dot"></span>
+              <div>Hybrid data handling that combines metadata storage, vector retrieval, and object storage for conversation artifacts and logs.</div>
+            </li>
+            <li>
+              <span class="dot"></span>
+              <div>Background jobs for summarization, deduplication, indexing, reprocessing, and policy-driven cleanup.</div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="use-cases">
+      <div class="shell">
+        <div class="section-top reveal">
+          <div>
+            <div class="section-label">Use Cases</div>
+            <h2 class="section-title">Clear business use cases for memory-aware AI products.</h2>
+          </div>
+          <p class="section-copy">
+            MemoryEngine is intended for application teams that need continuity, not novelty. The most immediate users are developers building AI products where repeated user context matters to product quality and retention.
+          </p>
+        </div>
+
+        <div class="use-cases-grid">
+          <article class="use-case reveal">
+            <h3>Customer-facing copilots</h3>
+            <p class="card-copy">
+              SaaS teams can retain account-specific details, role preferences, setup history, and recurring tasks so support or productivity copilots become more useful over time.
+            </p>
+          </article>
+
+          <article class="use-case reveal">
+            <h3>AI workflow assistants</h3>
+            <p class="card-copy">
+              Agents that help with recurring work need to remember prior decisions, handoff notes, operational context, and user-specific workflows across sessions.
+            </p>
+          </article>
+
+          <article class="use-case reveal">
+            <h3>Internal knowledge agents</h3>
+            <p class="card-copy">
+              Teams building internal assistants can use persistent memory to retain employee preferences, project context, and approved sources for future interactions.
+            </p>
+          </article>
+
+          <article class="use-case reveal">
+            <h3>Agent infrastructure platforms</h3>
+            <p class="card-copy">
+              AI startups that provide orchestration, automation, or copilots can embed memory as part of their developer platform rather than maintaining ad hoc storage logic per feature.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="architecture">
+      <div class="shell">
+        <div class="section-top reveal">
+          <div>
+            <div class="section-label">Architecture</div>
+            <h2 class="section-title">Designed as a service layer that can grow with workload complexity.</h2>
+          </div>
+          <p class="section-copy">
+            The expected architecture combines an application-facing API layer with retrieval services, durable storage, and asynchronous processing. This reflects how memory systems behave in production: write-heavy, retrieval-sensitive, multi-tenant, and operationally visible.
+          </p>
+        </div>
+
+        <div class="section-card reveal">
+          <div class="architecture-layout">
+            <div class="architecture-row">
+              <div class="arch-node">
+                <h3>Applications</h3>
+                <p>Developers integrate MemoryEngine from agents, chat systems, copilots, and SaaS workflows.</p>
+              </div>
+              <div class="arch-node">
+                <h3>API and Auth</h3>
+                <p>Request routing, tenant scoping, authentication, rate controls, and request validation.</p>
+              </div>
+              <div class="arch-node">
+                <h3>Memory Services</h3>
+                <p>Write pipelines, retrieval orchestration, summarization, indexing, and policy-aware memory handling.</p>
+              </div>
+              <div class="arch-node">
+                <h3>Data Layer</h3>
+                <p>Relational metadata, vector search, object storage, and logs needed for durable memory operations.</p>
+              </div>
+            </div>
+            <div class="architecture-note">
+              Supporting services are expected to include queues, scheduled jobs, backup and retention workflows, observability, secrets management, and separate staging and production environments. These are core infrastructure needs for the product rather than optional extras.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="cloud-needs">
+      <div class="shell">
+        <div class="section-top reveal">
+          <div>
+            <div class="section-label">Cloud Needs</div>
+            <h2 class="section-title">Meaningful infrastructure requirements from the start.</h2>
+          </div>
+          <p class="section-copy">
+            MemoryEngine is expected to make real use of cloud infrastructure because the product itself depends on always-available APIs, storage, indexing, background processing, and monitoring. As usage grows, those needs become central to both product quality and cost structure.
+          </p>
+        </div>
+
+        <div class="infra-grid">
+          <article class="infra-card reveal">
+            <h3>API hosting and networking</h3>
+            <p class="card-copy">
+              Public API endpoints for memory writes and retrieval, environment isolation, secure networking, and gradual scaling as tenant traffic increases.
+            </p>
+          </article>
+
+          <article class="infra-card reveal">
+            <h3>Vector search and metadata storage</h3>
+            <p class="card-copy">
+              Searchable embeddings, relational metadata, and indexed retrieval are core to the product and likely to grow with usage volume.
+            </p>
+          </article>
+
+          <article class="infra-card reveal">
+            <h3>Background jobs and queues</h3>
+            <p class="card-copy">
+              Ingestion, summarization, indexing, retries, cleanup, and batch reprocessing require asynchronous worker infrastructure.
+            </p>
+          </article>
+
+          <article class="infra-card reveal">
+            <h3>Storage and backups</h3>
+            <p class="card-copy">
+              Durable storage is needed for logs, conversation artifacts, exported memory objects, backups, and audit-oriented data handling.
+            </p>
+          </article>
+
+          <article class="infra-card reveal">
+            <h3>Scaling and reliability</h3>
+            <p class="card-copy">
+              Usage patterns can shift quickly with beta onboarding, making autoscaling, deployment safety, and environment management important early.
+            </p>
+          </article>
+
+          <article class="infra-card reveal">
+            <h3>Monitoring and security</h3>
+            <p class="card-copy">
+              Metrics, logs, tracing, alerting, secrets management, and access controls are required to operate memory infrastructure responsibly.
+            </p>
+          </article>
+        </div>
+
+        <div class="infra-callout reveal" style="margin-top: 20px;">
+          <strong>Expected AWS relevance</strong><br>
+          This product is a strong fit for managed cloud services across compute, storage, databases, vector indexing, queues, monitoring, and security. The anticipated infrastructure footprint is substantial enough that cloud credits would directly support product development, beta operations, and early customer onboarding.
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="team">
+      <div class="shell">
+        <div class="section-top reveal">
+          <div>
+            <div class="section-label">Team / Founder</div>
+            <h2 class="section-title">Founder-led, product-focused, and building with early user feedback.</h2>
+          </div>
+          <p class="section-copy">
+            MemoryEngine is currently an early-stage, founder-led effort focused on shipping a credible MVP and validating the product with developers building AI applications. The near-term priority is execution: product quality, onboarding, and infrastructure readiness.
+          </p>
+        </div>
+
+        <div class="team-grid">
+          <article class="team-card reveal">
+            <h3>Founder-led execution</h3>
+            <p class="card-copy">
+              The company is currently operating with direct founder involvement across product definition, technical architecture, and early customer conversations.
+            </p>
+          </article>
+
+          <article class="team-card reveal">
+            <h3>Engineering focus</h3>
+            <p class="card-copy">
+              The product emphasis is on API reliability, retrieval quality, storage design, and the operational concerns required for production memory systems.
+            </p>
+          </article>
+
+          <article class="team-card soft reveal">
+            <h3>Early customer orientation</h3>
+            <p class="card-copy">
+              The goal of the next phase is to work with a focused set of product teams and AI startups to validate usage patterns, performance needs, and deployment requirements.
+            </p>
+          </article>
+
+          <article class="team-card reveal">
+            <h3>Business intent</h3>
+            <p class="card-copy">
+              MemoryEngine is being positioned as a real infrastructure business serving application developers, not as a research demo or consumer-facing chatbot brand.
+            </p>
+          </article>
+        </div>
+
+        <div class="team-callout reveal" style="margin-top: 20px;">
+          A concise founder profile, technical walkthrough, and product roadmap can be shared directly with interested partners or program reviewers on request.
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="contact">
+      <div class="shell">
+        <div class="contact-grid">
+          <div class="contact-card primary-card reveal">
+            <div class="section-label" style="color: #9cd3ff;">Contact</div>
+            <h2 class="section-title" style="font-size: clamp(1.9rem, 4vw, 2.8rem); margin-bottom: 14px;">Get in touch with MemoryEngine.</h2>
+            <p class="contact-copy">
+              We are interested in speaking with developers, AI startups, and SaaS teams building agents or copilots that need persistent memory across sessions.
+            </p>
+            <div class="contact-actions">
+              <a class="button secondary" href="mailto:aditykushwaha69@gmail.com?subject=Contact%20MemoryEngine">Contact us</a>
+            </div>
+          </div>
+
+          <div class="contact-card reveal">
+            <h3>Details</h3>
+            <p class="contact-copy">
+              For program review, partnership inquiries, or product questions, please reach out directly through the contact information below.
+            </p>
+            <ul class="contact-list" style="margin-top: 18px;">
+              <li>
+                <span class="dot"></span>
+                <div><span>Email</span> <a class="inline-link" href="mailto:aditykushwaha69@gmail.com">aditykushwaha69@gmail.com</a></div>
+              </li>
+              <li>
+                <span class="dot"></span>
+                <div><span>GitHub</span> <a class="inline-link" href="https://github.com/ADITYA-kus" target="_blank" rel="noreferrer">github.com/ADITYA-kus</a></div>
+              </li>
+              <li>
+                <span class="dot"></span>
+                <div><span>Focus</span> Persistent memory infrastructure for AI agents and copilots</div>
+              </li>
+            </ul>
+            <div class="contact-banner" style="margin-top: 20px;">
+              The current website is intentionally simple: one page, direct company information, and clear product framing for partners, customers, and program reviewers.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="shell">
+      <div class="footer-bar">
+        <div class="footer-brand">
+          <div class="brand-line">
+            <span class="brand-mark" style="width: 32px; height: 32px; border-radius: 10px; font-size: 0.92rem;">M</span>
+            <span>MemoryEngine</span>
+          </div>
+          <div class="footer-note">Persistent memory infrastructure for AI agents.</div>
+        </div>
+        <div class="footer-links">
+          <a href="#about">About</a>
+          <a href="https://github.com/ADITYA-kus" target="_blank" rel="noreferrer">GitHub</a>
+          <a href="mailto:aditykushwaha69@gmail.com">Contact</a>
+          <a href="#">Privacy</a>
+          <a href="#">Terms</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const header = document.querySelector('.site-header');
+    const menuToggle = document.querySelector('.menu-toggle');
+    const navLinks = document.querySelectorAll('.nav-links a');
+
+    if (menuToggle) {
+      menuToggle.addEventListener('click', function () {
+        const open = header.classList.toggle('menu-open');
+        menuToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+
+      navLinks.forEach(function (link) {
+        link.addEventListener('click', function () {
+          header.classList.remove('menu-open');
+          menuToggle.setAttribute('aria-expanded', 'false');
+        });
+      });
+    }
+
+    const observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.16 });
+
+    document.querySelectorAll('.reveal').forEach(function (element) {
+      observer.observe(element);
+    });
+  </script>
+</body>
+</html>
